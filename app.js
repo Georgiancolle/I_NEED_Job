@@ -6,8 +6,24 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+const regions = require('./routes/regions')
+const employers = require('./routes/employers')
 
 var app = express();
+
+// db conn using .env file in development mode
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config()
+}
+
+const mongoose = require('mongoose')
+mongoose.connect(process.env.DATABASE_URL)
+.then((res) => {
+    console.log('Connected to MongoDB')
+  }
+).catch(() => {
+  console.log('Cannot connect to MongoDB')
+})
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -21,6 +37,21 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/regions', regions)  // point this url path to our new regions.js controller
+app.use('/employers', employers)
+
+// hbs helper function to pre-select correct dropdown option
+const hbs = require('hbs')
+
+hbs.registerHelper('selectCorrectOption', (currentVal, selectedVal) => {
+  // if values match, append ' selected' to this option tag
+  let selectedProperty = ''
+  if (currentVal === selectedVal) {
+    selectedProperty = ' selected'
+  }
+
+  return new hbs.SafeString(`<option${selectedProperty}>${currentVal}</option>`)
+})
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
