@@ -14,7 +14,8 @@ router.get('/', (req, res) => {
         else {
             res.render('regions/index', { 
                 title: 'Regions',
-                regions: regions
+                regions: regions,
+                user: req.user
             })
         }
     })  

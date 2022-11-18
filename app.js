@@ -8,6 +8,10 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 const regions = require('./routes/regions')
 const employers = require('./routes/employers')
+const auth = require('./routes/auth')
+
+const passport = require('passport')
+const session = require('express-session')
 
 var app = express();
 
@@ -15,6 +19,25 @@ var app = express();
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config()
 }
+
+// passport config for auth
+app.use(session({
+  secret: process.env.PASSPORT_SECRET,
+  resave: true,
+  saveUninitialized: false
+}))
+
+app.use(passport.initialize())
+app.use(passport.session())
+
+const User = require('./models/user')
+passport.use(User.createStrategy())
+
+// let passport read/write user data to/from session vars
+passport.serializeUser(User.serializeUser())
+passport.deserializeUser(User.deserializeUser())
+
+// google auth config
 
 const mongoose = require('mongoose')
 mongoose.connect(process.env.DATABASE_URL)
@@ -39,6 +62,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/regions', regions)  // point this url path to our new regions.js controller
 app.use('/employers', employers)
+app.use('/auth', auth)
 
 // hbs helper function to pre-select correct dropdown option
 const hbs = require('hbs')
